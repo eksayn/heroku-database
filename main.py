@@ -1,29 +1,23 @@
-import os
 import telebot
-import logging
-import psycopg2
-from config import *
-from flask import Flask, request
 
-bot = telebot.TeleBot(BOT_TOKEN)
-server = Flask(__name__)
-logger = telebot.logger
-logger.setLevel(logging.DEBUG)
+API_TOKEN = "5331465204:AAHpbJokyGhnr9s82ZrqqXNdIDcHMhXy89U"
 
-@bot.message_handler(commands=["start"])
-def start(message):
+bot = telebot.TeleBot(API_TOKEN)
 
-    username = message.from_user.username
-    bot.reply_to(message, f"Hello, {username}!")
 
-@server.route(f"/{BOT_TOKEN}", methods=["POST"])
-def redirect_message():
-    json_string = request.get_data().decode("utf-8")
-    update = telebot.types.Update.de_json(json_string)
-    bot.process_new_updates([update])
-    return "!", 200
+# Handle '/start' and '/help'
+@bot.message_handler(commands=['help', 'start'])
+def send_welcome(message):
+    bot.reply_to(message, """\
+Hi there, I am EchoBot.
+I am here to echo your kind words back to you. Just say anything nice and I'll say the exact same thing to you!\
+""")
 
-if __name__ == "__main__":
-    bot.remove_webhook()
-    bot.set_webhook(url=APP_URL)
-    server.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
+# Handle all other messages with content_type 'text' (content_types defaults to ['text'])
+@bot.message_handler(func=lambda message: True)
+def echo_message(message):
+    bot.reply_to(message, message.text)
+
+
+bot.infinity_polling()
