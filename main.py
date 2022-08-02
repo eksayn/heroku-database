@@ -2,7 +2,7 @@ import telebot
 import psycopg2
 
 from config import *
-bot = telebot.TeleBot(API_TOKEN)
+bot = telebot.TeleBot(BOT_TOKEN)
 
 conn=psycopg2.connect(DB_URI,sslmode='require')
 cur=conn.cursor()
@@ -10,14 +10,10 @@ cur=conn.cursor()
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     id = message.from_user.id
-    username=message.from_user.name
+    username=message.from_user.first_name
     bot.reply_to(message,f"Hello {username}")
-    cur.execute(f"SELECT user_id FROM messages WHERE user_id = {id}")
-    result=cur.fetchone()
-
-    if not result:
-        cur.execute("INSERT INTO messages(user_id, user_name, message) VALUES(%s, %s, %s)",(id,username,message))
-        conn.commit()
+    cur.execute("INSERT INTO users(id, username, message) VALUES(%s, %s, %s)",(id,username,message.text))
+    conn.commit()
 
 
 # Handle all other messages with content_type 'text' (content_types defaults to ['text'])
